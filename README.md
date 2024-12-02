@@ -21,7 +21,6 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.output_parsers import ResponseSchema
-from langchain.schema import OutputParserException
 from langchain.schema.output_parser import StrOutputParser
 
 # Define the PromptTemplate
