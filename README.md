@@ -18,50 +18,56 @@ Implement an output parser to extract structured results from the model's respon
 ### PROGRAM:
 ```python
 from langchain.prompts import PromptTemplate
-from langchain.llms import OpenAI
-from langchain.output_parsers import StructuredOutputParser, ResponseSchema
+from langchain.chains import LLMChain
+from langchain.chat_models import ChatOpenAI
+from langchain.output_parsers import ResponseSchema
+from langchain.schema import OutputParserException
+from langchain.schema.output_parser import StrOutputParser
 
-# Define the prompt template with two parameters
+# Define the PromptTemplate
 prompt = PromptTemplate(
-    input_variables=["topic", "context"],
-    template="Write a summary about {topic} based on the following context: {context}"
+    template="""
+You are a travel assistant. Based on the following inputs, recommend a destination:
+- Preferred activity: {activity}
+- Budget (in USD): {budget}
+
+Provide a response strictly in JSON format:
+{{
+    "destination": "<destination>",
+    "activity": "<activity>",
+    "cost": "<cost>"
+}}
+""",
+    input_variables=["activity", "budget"],
 )
 
-# Initialize the language model
-llm = OpenAI(model="text-davinci-003", temperature=0.7)
-
-# Define the response schema for the output parser
+# Define the Output Parser
 response_schemas = [
-    ResponseSchema(name="summary", description="A concise summary of the topic"),
-    ResponseSchema(name="key_points", description="Main points covered in the summary")
+    ResponseSchema(name="destination", description="Recommended travel destination"),
+    ResponseSchema(name="activity", description="Suggested activity at the destination"),
+    ResponseSchema(name="cost", description="Estimated cost in USD for the trip"),
 ]
+output_parser = StrOutputParser()
 
-output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
+# Initialize the LLM
+llm = ChatOpenAI(model="gpt-4-0613", temperature=0)
 
-# Example function to evaluate the LCEL expression
-def evaluate_expression(topic, context):
-    # Generate the prompt with input parameters
-    formatted_prompt = prompt.format(topic=topic, context=context)
-    
-    # Get the response from the LLM
-    raw_output = llm(formatted_prompt)
-    
-    # Parse the output into a structured format
-    parsed_output = output_parser.parse(raw_output)
-    
-    return parsed_output
+# Create the LangChain Expression (LLM Chain)
+chain = LLMChain(llm=llm, prompt=prompt, output_parser=output_parser)
 
-# Example usage
-if __name__ == "__main__":
-    topic = "Artificial Intelligence"
-    context = "Artificial Intelligence is a field of study focusing on creating machines capable of mimicking human intelligence. It includes machine learning, robotics, and natural language processing."
-    result = evaluate_expression(topic, context)
-    print("LCEL Expression Output:")
-    print(result)
+# Test the chain with an example
+input_data = {"activity": "hiking", "budget": 1000}
+result = chain.run(input_data)
+
+# Parse the structured output
+parsed_result = output_parser.parse(result)
+
+# Display the result
+print("Recommendation:", parsed_result)
 ```
 
 ### OUTPUT:
-![alt text](Image.png)
+![alt text](Output.png)
 
 ### RESULT:
 Hence,the program to design and implement a LangChain Expression Language (LCEL) expression that utilizes at least two prompt parameters and three key components (prompt, model, and output parser), and to evaluate its functionality by analyzing relevant examples of its application in real-world scenarios is written and successfully executed.
